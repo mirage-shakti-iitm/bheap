@@ -1,0 +1,7 @@
+(library
+ (name bheap)
+ (public_name bheap)
+ (modules Binary_heap)
+ (wrapped false)
+ (flags (:standard -w +A-29 -g -bin-annot))
+ )
