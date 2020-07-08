@@ -1,7 +1,7 @@
 (library
  (name bheap)
  (public_name bheap)
- (modules Binary_heap)
+ (modules Binary_heap Binary_heap_cap_tee)
  (wrapped false)
  (flags (:standard -w +A-29 -g -bin-annot))
  (ocamlopt_flags (-S))
