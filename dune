@@ -4,4 +4,5 @@
  (modules Binary_heap)
  (wrapped false)
  (flags (:standard -w +A-29 -g -bin-annot))
+ (ocamlopt_flags (-S))
  )
