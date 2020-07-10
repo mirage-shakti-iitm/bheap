@@ -8,8 +8,9 @@ bug-reports: "https://github.com/UnixJunkie/bheap/issues"
 dev-repo: "git+https://github.com/UnixJunkie/bheap.git"
 license: "LGPL-2.1"
 build: [
- 	["dune" "subst"] {pinned}
-  	["dune" "build" "-x" "riscv" "-p" "bheap" "-j" jobs]
+  [make "add-cap-files"]
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-x" "riscv" "-p" "bheap" "-j" jobs]
 ]
 
 depends: [
