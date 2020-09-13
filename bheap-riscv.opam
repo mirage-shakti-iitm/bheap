@@ -14,10 +14,9 @@ build: [
 ]
 
 depends: [
-  "ocaml" {>= "4.07.0"}
+  "ocaml-riscv" {>= "4.07.0"}
   "ocamlfind"
   "dune" {build}
-  "ocaml-riscv"
 ]
 
 url {
