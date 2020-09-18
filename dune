@@ -4,5 +4,5 @@
  (modules Binary_heap Binary_heap_cap_tee)
  (wrapped false)
  (flags (:standard -w +A-29 -g -bin-annot))
- (ocamlopt_flags (-S))
+ (ocamlopt_flags (-S -function-sections))
  )
