@@ -28,42 +28,53 @@ module Make(X : Ordered) = struct
      from [0] to [size - 1]. From an element stored at [i], the left
      (resp. right) subtree, if any, is rooted at [2*i+1] (resp. [2*i+2]). *)
 
-  type t = { mutable size : int; mutable data : X.t array }
+  type t = {
+      mutable size : int;
+      mutable data : X.t array;
+             dummy : X.t;
+           min_cap : int; (* minimal capacity, as given initially *)
+    }
+  (* invariant 0 <= size <= length data *)
+  (* invariant data[size..] only contains dummy *)
 
-  (* When [create n] is called, we cannot allocate the array, since there is
-     no known value of type [X.t]; we'll wait for the first addition to
-     do it, and we remember this situation with a negative size. *)
+  let create ~dummy n =
+    if n < 0 || n > Sys.max_array_length then invalid_arg "create";
+    let n = max 16 n in
+    { size = 0; data = Array.make n dummy; dummy = dummy; min_cap = n }
 
-  let create n =
-    if n <= 0 then invalid_arg "create";
-    { size = -n; data = [||] }
+  let length h = h.size
 
-  let is_empty h = h.size <= 0
+  let is_empty h = h.size = 0
 
-  (* [resize] doubles the size of [data] *)
-
-  let resize h =
+  (* [enlarge] doubles the size of [data] *)
+  let enlarge h =
     let n = h.size in
-    assert (n > 0);
-    let n' = 2 * n in
+    assert (n > 0 && n = Array.length h.data);
+    let n' = min (2 * n) Sys.max_array_length in
+    if n' = n then failwith "maximum capacity reached";
     let d = h.data in
-    let d' = Array.create n' d.(0) in
+    let d' = Array.make n' h.dummy in
     Array.blit d 0 d' 0 n;
     h.data <- d'
 
+  let shrink h =
+    let n = Array.length h.data in
+    let n' = max h.min_cap (n / 2) in
+    assert (h.size <= n' && n' <= n);
+    if n' < n then begin
+      let d = h.data in
+      let d' = Array.make n' h.dummy in
+      Array.blit d 0 d' 0 h.size;
+      h.data <- d'
+    end
+
   let add h x =
-    (* first addition: we allocate the array *)
-    if h.size < 0 then begin
-      h.data <- Array.create (- h.size) x; h.size <- 0
-    end;
     let n = h.size in
-    (* resizing if needed *)
-    if n == Array.length h.data then resize h;
+    if n == Array.length h.data then enlarge h;
     let d = h.data in
-    (* moving [x] up in the heap *)
     let rec moveup i =
       let fi = (i - 1) / 2 in
-      if i > 0 && X.compare d.(fi) x < 0 then begin
+      if i > 0 && X.compare d.(fi) x > 0 then begin
 	d.(i) <- d.(fi);
 	moveup fi
       end else
@@ -72,7 +83,7 @@ module Make(X : Ordered) = struct
     moveup n;
     h.size <- n + 1
 
-  let maximum h =
+  let minimum h =
     if h.size <= 0 then raise Empty;
     h.data.(0)
 
@@ -82,15 +93,15 @@ module Make(X : Ordered) = struct
     h.size <- n;
     let d = h.data in
     let x = d.(n) in
-    (* moving [x] down in the heap *)
+    d.(n) <- h.dummy;
     let rec movedown i =
       let j = 2 * i + 1 in
       if j < n then
 	let j =
 	  let j' = j + 1 in
-	  if j' < n && X.compare d.(j') d.(j) > 0 then j' else j
+	  if j' < n && X.compare d.(j') d.(j) < 0 then j' else j
 	in
-	if X.compare d.(j) x > 0 then begin
+	if X.compare d.(j) x < 0 then begin
 	  d.(i) <- d.(j);
 	  movedown j
 	end else
@@ -98,9 +109,10 @@ module Make(X : Ordered) = struct
       else
 	d.(i) <- x
     in
-    movedown 0
+    movedown 0;
+    if 4 * h.size < Array.length h.data then shrink h
 
-  let pop_maximum h = let m = maximum h in remove h; m
+  let pop_minimum h = let m = minimum h in remove h; m
 
   let iter f h =
     let d = h.data in
