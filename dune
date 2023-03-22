@@ -2,7 +2,7 @@
  (public_name bheap)
  (name binary_heap)
  (modules binary_heap)
- (ocamlopt_flags (-setu-cap-path "/home/sai/Shakti-TEE-Practical/mirage-shakti/setu-cap-files/bheap" -function-sections)))
+ (ocamlopt_flags (-default-compartment-id 5 -function-sections)))
 
 (test
  (name test)
